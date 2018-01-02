@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Khan Framework</title>
+</head>
+<body>
+	<h1>Testando Khan</h1>
+	<script src="build/khan.min.js"></script>
+	<script>
+
+		let khan = new $khan();
+		let Router = khan.Router();
+
+		khan.set('ola', 'nome');
+		khan.use(function(next){
+			this.msg = 'Ola mundo!!';
+			next();
+		});
+		khan.use(Router);
+
+		Router.any('/', function(){
+			document.body.innerHTML += `Testando middleware ${this.msg}`;
+		});
+
+		Router.any('/pagina/{id}', function(pagina_id){
+			document.body.innerHTML += `Pagina recebeu id: ${pagina_id}`;
+		});
+
+		khan.listen();
+
+	</script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+const express = require('express');
+const app = express();
+const path = require('path');
+
+__dirname = __dirname.replace('/server', '');
+
+app.use(express.static(path.join(__dirname, 'vendor')));
+app.set('views', __dirname + '/views');
+
+app.get('/', (req, res) => {
+	res.sendFile(app.get('views') + '/index.html');
+});
+
+app.listen(1500, function(){
+	console.log("On in port: 1500");
+});

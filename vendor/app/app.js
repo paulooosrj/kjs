@@ -4,7 +4,6 @@ const global = window;
 const middleware = require('./modules/middleware');
 const Router = require('./modules/router');
 const $controller = require('./modules/controller');
-console.log($controller);
 
 global.$khan = class {
 

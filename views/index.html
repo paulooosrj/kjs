@@ -5,7 +5,11 @@
 	<title>Khan Framework</title>
 </head>
 <body>
-	<h1>Testando Khan</h1>
+	
+	<div khan-controller="index">
+	   <h1>Testando Khan {{ nome }}</h1>
+	</div>  
+	
 	<script src="build/khan.min.js"></script>
 	<script>
 
@@ -20,7 +24,17 @@
 		khan.use(Router);
 
 		Router.any('/', function(){
+		    
+		    khan.$controller('index', function($scope){
+		         console.log($scope);
+		         $scope.nome = "PaulaoDev"; 
+		         setTimeout(function(){
+		             $scope.nome = "Paulao Junior";  
+		         }, 5000);
+		    });
+		    
 			document.body.innerHTML += `Testando middleware ${this.msg}`;
+		
 		});
 
 		Router.any('/pagina/{id}', function(pagina_id){

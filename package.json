@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm-run-all -l -p start-server start-webpack",
     "start-webpack": "webpack -p",
-    "start-server": "nodemon server/http-server",
+    "start-server": "nodemon http-server",
     "test": "node tests/test.js"
   },
   "repository": {

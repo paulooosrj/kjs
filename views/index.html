@@ -7,7 +7,7 @@
 <body>
 	
 	<div khan-controller="index">
-	   <h1>Testando Khan {{ nome }}</h1>
+	   <h1 onClick="{{ $changeNome }}">Testando Khan {{ $nome }}</h1>
 	</div>  
 	
 	<script src="build/khan.min.js"></script>
@@ -24,15 +24,23 @@
 		khan.use(Router);
 
 		Router.any('/', function(){
-		    
-		    khan.$controller('index', function($scope){
-		         console.log($scope);
-		         $scope.nome = "PaulaoDev"; 
-		         setTimeout(function(){
-		             $scope.nome = "Paulao Junior";  
-		         }, 5000);
-		    });
-		    
+			
+			khan.$controller('index', function($scope){
+				this.nome = "PaulaoDev";
+
+				this.changeNome = function($e){
+					if(!$e.classList.contains('clicado')){
+						$e.classList.add('clicado');
+						$e.innerHTML += " Cliquei!!";
+					}
+				}.bind(this);
+
+				setTimeout(function(){
+					this.nome = "PaulaoDeveloper";
+				}.bind(this), 5000);
+
+			});
+
 			document.body.innerHTML += `Testando middleware ${this.msg}`;
 		
 		});

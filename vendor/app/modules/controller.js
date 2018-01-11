@@ -1,9 +1,10 @@
-window.$broadcast = (data = {}) => {
+window.$broadcast = (data = {}, ctrl) => {
 	return function(update = () => {}){
 		return new Proxy(data, {
             get: (target, key) => (key in target) ? target[key] : null,
             set: (target, key, value) => {
               if(!target["$_updates"]) target["$_updates"] = true;
+              ctrl[key] = value;
 				      target[key] = value;
               update(target, key, value);
             }
@@ -28,70 +29,51 @@ khanApp.$controller = function($view, $event){
         window['khan_controller'][$view] = {};
         let model = window['khan_controller'][$view];
         let $ctrl = "window.khan_controller." + $view;
-        let proxy = $broadcast(model)(khanApp.updateView(`[khan-controller="${$view}"]`, $ctrl));
-        $event.bind(proxy)(proxy);
+        //$event.bind(proxy)(proxy);
+        $event.bind(new class {
+            render(){
+                model = Object.assign({render: () => {} }, model, this);
+                window['khan_controller'][$view] = model;
+                khanApp.render(`[khan-controller="${$view}"]`, model, $ctrl);
+                let proxy = $broadcast(model, window['khan_controller'][$view])(khanApp.updateView(`[khan-controller="${$view}"]`, $ctrl));
+                $event.bind(proxy)(proxy);
+            }
+        })();
     }
 };
 
 khanApp.parse_template = (code, data, controller) => {
-    var code_t = code.replace(/\n/g, '').replace(/\s\s/g, '');
-    var fk = code_t.match(/{{(.*?)}}/g).length;
-    var make_test = (data) => {
-          if(data["$_updates"]) delete data["$_updates"];
-          if(data["computed"]) delete data["computed"];
-          return Object.keys(data).length;
+
+    let receive = Object.keys(data)
+                        .filter((k) => k !== "render")
+                        .map((k) => `\\$${k}`).join('|');
+    receive = new RegExp(receive, 'gim');
+
+    code = code.replace(receive, (match) => {
+        var m = match.replace('$', '');
+        if(data[m]){
+            var $d = controller + "." + m;
+            if(typeof data[m] === "function"){
+               if(!data.computed) data.computed = {};
+               data["computed"][m] = data[m];
+               $d = `${controller}.computed.${m}`;
+            }
+            return $d;
+        }
+    }).replace(/\{\{/gim, '${').replace(/\}\}/gim, '}');
+
+    const interpolates = (code) => {
+        return   code.replace(new RegExp('&gt;', 'gim'), '>')
+                     .replace(new RegExp('&lt;', 'gim'), '<')
+                     .replace(new RegExp('\\<\\(', 'gim'), "'")
+                     .replace(new RegExp('\\)\\>', 'gim'), "'")
+                     .replace(new RegExp('\\<\\=\\(', 'gim'), "+ '")
+                     .replace(new RegExp('\\)\\=\\>', 'gim'), "' +");
     };
 
-    if(make_test(data) >= fk){
+    code = interpolates(code);
 
-      code_t.match(/{{(.*?)}}/g).map((m) => {
-
-        var n = m.replace('{{', '')
-                 .replace('}}', '')
-                 .trim();
-
-        var gn = '';
-
-
-        Object.keys(data).map((k) => {
-            gn = `$${k}`;
-            if(n.includes(gn)){
-               gn = '\\' + gn;
-               if(typeof data[k] === "function"){
-                  if(!data.computed) data.computed = {};
-                  if(data.computed[k]) return;
-                  data.computed[k] = data[k];
-                  n = n.replace(new RegExp(gn, 'g'), controller + ".computed['"+k+"']");
-               }else{
-                  n = n.replace(new RegExp(gn, 'g'), controller + "." + k);
-               }
-            }
-        });
-
-        if(!n.includes('.computed[')){
-          code_t = code_t.replace(m, '${' + n + '}');
-        }else{
-          if(!n.includes('(') && !n.includes(')')){
-            code_t = code_t.replace(m, '' + n + '(this)');
-          }else{
-            code_t = code_t.replace(m, '${' + n + '}');
-          }
-        }
-
-      });
-
-      code_t = code_t.replace(new RegExp('&gt;', 'g'), '>')
-                     .replace(new RegExp('&lt;', 'g'), '<')
-                     .replace(new RegExp('\\#\\(', 'g'), "'")
-                     .replace(new RegExp('\\)\\#', 'g'), "'")
-                     .replace(new RegExp('\\-\\>', 'g'), "+")
-                     .replace(new RegExp('\\<\\-', 'g'), "+");
-
-      return new Function('return `'+code_t+'`;');     
-
-    }
-
-    return function(){};
+    return new Function('return `'+code+'`;');
 
 };
 
@@ -122,19 +104,12 @@ khanApp.render = function(view, data, controller){
              );
     }
     
-    try{
-      view.setAttribute('visibility', 'visible');
-      try{
-        view.innerHTML = code();
-      }catch(e){
-          throw e;
-      }
-    }catch(e){ 
-        throw e; 
-    }
+    try{ view.innerHTML = code(); }catch(e){}
+
 };
 
 khanApp.updateView = (view, controller) => {
+    // console.log('Update!!');
 	  return function(data, key, value){
         khanApp.render(view, data, controller);
     };

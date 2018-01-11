@@ -61,6 +61,7 @@ let Controllers = khan.$controller;
 
 Controllers('index', function($scope){
     this.nome = "PaulaoDev";
+    this.render();
 });
 ```
 

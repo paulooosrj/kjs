@@ -7,6 +7,8 @@
 ```html
 <!-- CDN -->
 <script src="https://cdn.rawgit.com/PaulaoDev/khan-framework/master/vendor/build/khan.min.js"></script>
+<!-- OR OUTHER CDN -->
+<script src="https://rawgit.com/PaulaoDev/khan-framework/master/vendor/build/khan.min.js"></script>
 <!-- OR STATIC FILE -->
 <script src="vendor/build/khan.min.js"></script>
 ```

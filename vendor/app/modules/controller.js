@@ -1,3 +1,9 @@
+"use strict";
+
+String.prototype.splice = function(idx, rem, str) {
+    return this.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
+};
+
 window.$broadcast = (data = {}, ctrl) => {
 	return function(update = () => {}){
 		return new Proxy(data, {
@@ -24,21 +30,51 @@ khanApp.create = function(){
 khanApp.$controller = function($view, $event){
     if(!window['khan_controller']) window['khan_controller'] = {};
     var view = document.querySelector(`[khan-controller="${$view}"]`);
-    view.setAttribute('visibility', 'hidden');
     if(view){
         window['khan_controller'][$view] = {};
         let model = window['khan_controller'][$view];
         let $ctrl = "window.khan_controller." + $view;
-        //$event.bind(proxy)(proxy);
+        // Watch
         $event.bind(new class {
             render(){
-                model = Object.assign({render: () => {} }, model, this);
+                model = Object.assign({
+                    render: () => {},
+                    $view: view
+                }, model, this);
                 window['khan_controller'][$view] = model;
                 khanApp.render(`[khan-controller="${$view}"]`, model, $ctrl);
-                let proxy = $broadcast(model, window['khan_controller'][$view])(khanApp.updateView(`[khan-controller="${$view}"]`, $ctrl));
+                let proxy = $broadcast(
+                    model, 
+                    window['khan_controller'][$view])(
+                        khanApp.updateView(
+                            `[khan-controller="${$view}"]`,
+                             $ctrl
+                        )
+                    );
                 $event.bind(proxy)(proxy);
             }
         })();
+        // cria uma nova instância de observador
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if(/\{\{(.*?)\}\}/gim.test(view.innerHTML)){
+                    var buffer = khanApp.last_render_buffer[view.dataset['render']];
+                    var code = view.innerHTML.replace(buffer, '');
+                    if(/\{\{(.*?)\}\}/gim.test(code)){
+                        khanApp.render_buffer[view.dataset['render']] += code;
+                        khanApp.updateView(`[khan-controller="${$view}"]`,$ctrl)(model);
+                    }
+                }
+            });    
+        });
+        // configuração do observador:
+        var config = { 
+            attributes: true, 
+            childList: true, 
+            characterData: true 
+        };
+        // passar o nó alvo, bem como as opções de observação
+        observer.observe(view, config);
     }
 };
 
@@ -72,7 +108,7 @@ khanApp.parse_template = (code, data, controller) => {
     };
 
     code = interpolates(code);
-
+    
     return new Function('return `'+code+'`;');
 
 };
@@ -104,12 +140,14 @@ khanApp.render = function(view, data, controller){
              );
     }
     
-    try{ view.innerHTML = code(); }catch(e){}
+    try{ 
+        view.innerHTML = code();
+        khanApp.last_render_buffer[view.dataset['render']] = code();
+    }catch(e){}
 
 };
 
 khanApp.updateView = (view, controller) => {
-    // console.log('Update!!');
 	  return function(data, key, value){
         khanApp.render(view, data, controller);
     };

@@ -7,7 +7,7 @@
 <body>
 	
 	<div khan-controller="index">
-	   <h1 onClick="{{ $changeNome }}">Testando Khan {{ $nome }}</h1>
+	   <h1 onClick="{{ '$changeNome(this)' }}">Testando Khan {{ $nome }}</h1>
 	</div>  
 	
 	<script src="build/khan.min.js"></script>
@@ -26,6 +26,7 @@
 		Router.any('/', function(){
 			
 			khan.$controller('index', function($scope){
+
 				this.nome = "PaulaoDev";
 
 				this.changeNome = function($e){
@@ -37,7 +38,9 @@
 
 				setTimeout(function(){
 					this.nome = "PaulaoDeveloper";
-				}.bind(this), 5000);
+				}.bind(this), 3000);
+
+				this.render();
 
 			});
 

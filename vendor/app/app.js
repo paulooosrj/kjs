@@ -1,6 +1,8 @@
 "use strict";
 
 const global = window;
+const async_loader = require('./modules/async_loader');
+const jsx = require('./modules/jsx_loader');
 const middleware = require('./modules/middleware');
 const Router = require('./modules/router');
 const $controller = require('./modules/controller');

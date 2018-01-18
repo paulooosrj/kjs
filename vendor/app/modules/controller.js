@@ -4,14 +4,32 @@ String.prototype.splice = function(idx, rem, str) {
     return this.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
 };
 
+const obj_diff = (one, two) => {
+	return (() => {
+		
+		var diffKeys = {};
+		Object.keys(two).map((o) => {
+			if((o in one)){
+				if(one[o] !== two[o]){
+					diffKeys[o] = two[o];
+                }
+            }else{
+				diffKeys[o] = two[o];
+            }
+        });
+
+		return diffKeys;
+
+    })();
+};
+
 window.$broadcast = (data = {}, ctrl) => {
 	return function(update = () => {}){
 		return new Proxy(data, {
             get: (target, key) => (key in target) ? target[key] : null,
             set: (target, key, value) => {
-              if(!target["$_updates"]) target["$_updates"] = true;
               ctrl[key] = value;
-				      target[key] = value;
+			  target[key] = value;
               update(target, key, value);
             }
     	});
@@ -22,6 +40,7 @@ window.khanApp = {};
 
 khanApp.db = {};
 khanApp.last_render_buffer = {};
+khanApp.last_data = {};
 
 khanApp.create = function(){
     return this;
@@ -88,7 +107,7 @@ khanApp.parse_template = (code, data, controller) => {
     code = code.replace(receive, (match) => {
         var m = match.replace('$', '');
         if(data[m]){
-            var $d = controller + "." + m;
+            var $d = `'<data value="${m}">'+${controller}.${m}+'</data>'`;
             if(typeof data[m] === "function"){
                if(!data.computed) data.computed = {};
                data["computed"][m] = data[m];
@@ -127,6 +146,7 @@ khanApp.render = function(view, data, controller){
     if(!khanApp.render_buffer) khanApp.render_buffer = {};
     if(!khanApp.render_buffer[view.dataset['render']]){
       khanApp.render_buffer[view.dataset['render']] = view.innerHTML;
+      khanApp.last_data = Object.assign({}, data);
       code = khanApp.parse_template(
                 view.innerHTML, 
                 data,
@@ -147,10 +167,23 @@ khanApp.render = function(view, data, controller){
 
 };
 
+khanApp.$update = () => {
+
+
+
+};
+
 khanApp.updateView = (view, controller) => {
-	  return function(data, key, value){
-        khanApp.render(view, data, controller);
-    };
+    console.log('update!!')
+	return function(data, key, value){
+        delete data['computed'];
+        for(let [key, value] of Object.entries(obj_diff(khanApp.last_data, data))){
+            if(document.querySelector('data[value="'+ key + '"]')){
+                var e = document.querySelector('data[value="'+ key + '"]');
+                e.innerHTML = value;
+            }
+        }
+    }; 
 };
 
 module.exports = khanApp.create().$controller;

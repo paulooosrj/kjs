@@ -1,26 +1,9 @@
 "use strict";
 
+const v_dom = require('./use/virtual-dom');
+
 String.prototype.splice = function(idx, rem, str) {
     return this.slice(0, idx) + str + this.slice(idx + Math.abs(rem));
-};
-
-const obj_diff = (one, two) => {
-	return (() => {
-		
-		var diffKeys = {};
-		Object.keys(two).map((o) => {
-			if((o in one)){
-				if(one[o] !== two[o]){
-					diffKeys[o] = two[o];
-                }
-            }else{
-				diffKeys[o] = two[o];
-            }
-        });
-
-		return diffKeys;
-
-    })();
 };
 
 window.$broadcast = (data = {}, ctrl) => {
@@ -28,8 +11,9 @@ window.$broadcast = (data = {}, ctrl) => {
 		return new Proxy(data, {
             get: (target, key) => (key in target) ? target[key] : null,
             set: (target, key, value) => {
+              if(!ctrl['$proxy']) ctrl['$proxy'] = this;
               ctrl[key] = value;
-			  target[key] = value;
+              target[key] = value;
               update(target, key, value);
             }
     	});
@@ -46,9 +30,14 @@ khanApp.create = function(){
     return this;
 };
 
+khanApp.createStream = function(model, controller, update){
+    return $broadcast( model, controller )( update );
+};
+
 khanApp.$controller = function($view, $event){
     if(!window['khan_controller']) window['khan_controller'] = {};
     var view = document.querySelector(`[khan-controller="${$view}"]`);
+    khanApp.virtualDom = v_dom(view);
     if(view){
         window['khan_controller'][$view] = {};
         let model = window['khan_controller'][$view];
@@ -58,18 +47,32 @@ khanApp.$controller = function($view, $event){
             render(){
                 model = Object.assign({
                     render: () => {},
+                    computed: {},
                     $view: view
                 }, model, this);
+
+                Object.keys(model).map((k) => {
+                    if(typeof model[k] === "function" && k !== "render"){
+                        model['computed'][k] = model[k];
+                    }
+                });
+
                 window['khan_controller'][$view] = model;
                 khanApp.render(`[khan-controller="${$view}"]`, model, $ctrl);
-                let proxy = $broadcast(
+                /* let proxy = $broadcast(
                     model, 
                     window['khan_controller'][$view])(
                         khanApp.updateView(
                             `[khan-controller="${$view}"]`,
                              $ctrl
                         )
-                    );
+                    ); */
+                let controllerr = window['khan_controller'][$view];
+                let proxy = khanApp.createStream(model, controllerr, khanApp.updateView(
+                    `[khan-controller="${$view}"]`,
+                     $ctrl
+                ));
+                window['khan_controller'][$view]['$proxy'] = proxy;
                 $event.bind(proxy)(proxy);
             }
         })();
@@ -97,38 +100,106 @@ khanApp.$controller = function($view, $event){
     }
 };
 
-khanApp.parse_template = (code, data, controller) => {
+khanApp.parse_template = (view, data, controller) => {
 
-    let receive = Object.keys(data)
-                        .filter((k) => k !== "render")
-                        .map((k) => `\\$${k}`).join('|');
-    receive = new RegExp(receive, 'gim');
+    for(var [key, value] of Object.entries(data)){
 
-    code = code.replace(receive, (match) => {
-        var m = match.replace('$', '');
-        if(data[m]){
-            var $d = `'<data value="${m}">'+${controller}.${m}+'</data>'`;
-            if(typeof data[m] === "function"){
-               if(!data.computed) data.computed = {};
-               data["computed"][m] = data[m];
-               $d = `${controller}.computed.${m}`;
-            }
-            return $d;
-        }
-    }).replace(/\{\{/gim, '${').replace(/\}\}/gim, '}');
+        var keyd = "$" + key + "\\$";
 
-    const interpolates = (code) => {
-        return   code.replace(new RegExp('&gt;', 'gim'), '>')
-                     .replace(new RegExp('&lt;', 'gim'), '<')
-                     .replace(new RegExp('\\<\\(', 'gim'), "'")
-                     .replace(new RegExp('\\)\\>', 'gim'), "'")
-                     .replace(new RegExp('\\<\\=\\(', 'gim'), "+ '")
-                     .replace(new RegExp('\\)\\=\\>', 'gim'), "' +");
-    };
+        khanApp.virtualDom
+        .filter(e => {
+            // console.log(keyd);
+            //console.log(e.scope, e.scope.includes(keyd) || Object.values(e.bind_in).includes(keyd));
+            var kd = '$' + key + '$';
+            return e.scope.includes(kd) || Object.values(e.bind_in).includes(kd);
+        })
+        .map(function(e){
 
-    code = interpolates(code);
-    
-    return new Function('return `'+code+'`;');
+            // console.log(e);
+
+            if(Object.keys(e.bind_in).length > 0){
+                Object.keys(e.bind_in).map((k) => { 
+                    var gen = e.bind_in[k].replace(new RegExp('\\'+ keyd, 'gim'), (match) => {
+                        return controller + '.' + key + '(event, this)'
+                        // console.log('achei: '+ match);
+                    });
+                    gen = gen.replace(/\{\{/gim, '${').replace(/\}\}/gim, '}');
+                    // console.log(gen);
+                    e.bind_in[k] = gen;
+                    e.elem.setAttribute(k, gen);
+                });
+            } /* */
+
+            const interpolates = (code) => {
+                return   code.replace(new RegExp('&gt;', 'gim'), '>')
+                            .replace(new RegExp('&lt;', 'gim'), '<')
+                            .replace(new RegExp('\\<\\(', 'gim'), "'")
+                            .replace(new RegExp('\\)\\>', 'gim'), "'")
+                            .replace(new RegExp('\\<\\=\\(', 'gim'), "+ '")
+                            .replace(new RegExp('\\)\\=\\>', 'gim'), "' +");
+            };
+
+            var gt = e.value.replace(new RegExp('\\'+ keyd, 'gim'), function(match){
+                var is_fn = (k) => eval(`${controller}.computed.${k}`);
+                return is_fn(key) ? `'${controller}.computed.${key}.bind(${controller}.$proxy)(event, this)'` : (() => {
+                    var tmp = controller + '.' + key;
+                    if(/\$(.*?)\$/gim.test(e.value)){
+                        var tp = e.value; 
+                        tp = tp.replace(/\$(.*?)\$/gim, (match) => {
+                            match = match.replace(/\$/gim, '');
+                            //console.log(match);
+                            return controller + '.' + match;
+                        });
+                        e.value = tp;
+                    }
+                    return tmp;
+                })();
+            });
+
+            gt = gt.replace(/\{\{/gim, '${').replace(/\}\}/gim, '}');
+            gt = interpolates(gt);
+            //console.log(gt);
+
+            try {
+                e.elem.innerHTML = new Function('return `'+ gt +'`;')();
+            } catch(e){}
+
+        });
+
+        khanApp.virtualDom
+        .filter((n) => n.elem.textContent.includes('{{') && n.elem.textContent.includes('}}'))
+        .map((n) => {
+
+            // console.log(n);
+            var gen = n.elem.textContent;
+            
+
+            gen = gen
+                    .replace(/\$(.*?)\$/gim, function(match){
+                        return controller + '.' + match.replace(/\$/g, '');
+                    })
+                    .replace(/\{\{/gim, '')
+                    .replace(/\}\}/gim, '');
+
+            gen = '${'+ gen +'}';
+
+            const interpolates = (code) => {
+                return   code.replace(new RegExp('&gt;', 'gim'), '>')
+                            .replace(new RegExp('&lt;', 'gim'), '<')
+                            .replace(new RegExp('\\<\\(', 'gim'), "'")
+                            .replace(new RegExp('\\)\\>', 'gim'), "'")
+                            .replace(new RegExp('\\<\\=\\(', 'gim'), "+ '")
+                            .replace(new RegExp('\\)\\=\\>', 'gim'), "' +");
+            };
+
+            //console.log(interpolates(gen));
+
+            n.elem.innerHTML = new Function('return `'+ interpolates(gen) +'`;')();
+
+        }); /* */
+
+
+    }
 
 };
 
@@ -147,11 +218,7 @@ khanApp.render = function(view, data, controller){
     if(!khanApp.render_buffer[view.dataset['render']]){
       khanApp.render_buffer[view.dataset['render']] = view.innerHTML;
       khanApp.last_data = Object.assign({}, data);
-      code = khanApp.parse_template(
-                view.innerHTML, 
-                data,
-                controller
-             );
+      code = khanApp.parse_template( view,  data, controller );
     }else{
       code = khanApp.parse_template(
                 khanApp.render_buffer[view.dataset['render']], 
@@ -159,30 +226,15 @@ khanApp.render = function(view, data, controller){
                 controller
              );
     }
-    
-    try{ 
-        view.innerHTML = code();
-        khanApp.last_render_buffer[view.dataset['render']] = code();
-    }catch(e){}
-
-};
-
-khanApp.$update = () => {
-
-
 
 };
 
 khanApp.updateView = (view, controller) => {
-    console.log('update!!')
+    //console.log('update!!')
 	return function(data, key, value){
-        delete data['computed'];
-        for(let [key, value] of Object.entries(obj_diff(khanApp.last_data, data))){
-            if(document.querySelector('data[value="'+ key + '"]')){
-                var e = document.querySelector('data[value="'+ key + '"]');
-                e.innerHTML = value;
-            }
-        }
+        //console.log('update: ' + key);
+        view = (typeof view === "object") ? view : document.querySelector(view);
+        khanApp.parse_template(view, {[key]: value}, controller);
     }; 
 };
 

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+
+  <div khan-controller="index">
+    <h1 onClick="{{ $getNome$ }}">{{ $nome$ }}</h1>
+    <div>
+        <input type="text" placeholder="Nome da pessoa" onKeyup="{{ $addUser$ }}"/>
+        <input type="number" class="idade" placeholder="Idade">
+    </div>
+    <br/>
+    <div>
+      {{
+        $pessoas$.map((p) => $makeCard$(p)).join('')
+      }}
+    </div>
+  </div>
+
+  <script src="build/khan.min.js"></script>
+  <script>
+
+    const khan = new Khan();
+    
+    khan.controller('index', function($scope){
+
+        var self = this;
+        
+        this.pessoas = [
+          {nome: "PaulaoDev", idade: 17},
+          {nome: "Maria", idade: 27},
+          {nome: "Joao", idade: 37},
+          {nome: "Pedro", idade: 47}
+        ];
+
+        this.getNome = function(){ 
+            console.log(this.nome); 
+        }.bind(this);
+
+        this.makeCard = (people) => {
+            return `
+              <fieldset>
+                <h1>Nome: ${ people.nome }</h1>
+                <h1>Idade: ${ people.idade }</h1>
+              </fieldset>
+            `;
+        };
+
+        this.nome = "PaulaoDev!!";
+
+        this.addUser= function(event, target){
+          var idade = document.querySelector('.idade');
+          if(event.keyCode === 13 && target.value.length > 2 && idade.value > 0){
+            var nome = target.value;
+            idade = idade.value;
+            console.log(this.pessoas);
+            this.pessoas = [...this.pessoas, {
+              nome: nome,
+              idade: idade
+            }];
+          }/*  */
+        }.bind(this);
+
+        setTimeout(function(){
+
+          this.nome = "Paulao Developer!!";
+
+        }.bind(this), 3000);
+
+        this.render();
+
+    });
+    
+  </script>
+</body>
+</html>

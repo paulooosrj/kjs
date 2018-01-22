@@ -7,6 +7,7 @@
     "start": "npm-run-all -l -p start-server start-webpack",
     "start-webpack": "webpack -p",
     "start-server": "nodemon http-server",
+    "start-ts": "tsc -w",
     "test": "node tests/test.js"
   },
   "repository": {

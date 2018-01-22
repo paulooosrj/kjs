@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "outDir": "vendor/build",
+    "lib": [
+      "es2016",
+      "dom"
+    ],
+    "module": "es6",
+    // "moduleResolution": "node",
+    "target": "es2016"
+  },
+  "include": [
+    "vendor/app/type/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "compileOnSave": true,
+}

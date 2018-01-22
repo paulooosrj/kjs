@@ -7,7 +7,7 @@ const middleware = require('./modules/middleware');
 const Router = require('./modules/router');
 const $controller = require('./modules/controller');
 
-global.$khan = class {
+global.Khan = class {
 
 	constructor(){
 		const self = this;		
@@ -29,7 +29,7 @@ global.$khan = class {
 		}
 	}
 	
-	get $controller(){
+	get controller(){
 	    return $controller;
 	}
 

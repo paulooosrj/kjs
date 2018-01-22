@@ -6,7 +6,7 @@ app.use(express.static(path.join(__dirname, 'vendor')));
 app.set('views', __dirname + '/views');
 
 app.get('/', (req, res) => {
-	res.sendFile(app.get('views') + '/index.html');
+	res.sendFile(app.get('views') + '/teste.html');
 });
 
 app.listen(5000, function(){

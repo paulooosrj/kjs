@@ -3,7 +3,10 @@ var webpack = require('webpack');
 
 module.exports = {
      watch: true,
-     entry: ["babel-polyfill", './vendor/app/app.js'],
+     entry: [
+         "babel-polyfill", 
+         './vendor/app/app.js'
+    ],
      output: {
          path: path.resolve(__dirname, 'vendor', 'build'),
          filename: 'khan.min.js'

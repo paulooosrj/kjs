@@ -18,18 +18,18 @@
 ## Usage
 
 ```js
-let khan = new $khan();
+let khan = new Khan();
 let Router = khan.Router();
-let Controllers = khan.$controller;
+let Controllers = khan.controller;
 ```
 
 ## Exemple Router
 - Simple but effective and fast system made with ecmascript 6
 
 ```Js
-let khan = new $khan();
+let khan = new Khan();
 let Router = khan.Router();
-let Controllers = khan.$controller;
+let Controllers = khan.controller;
 
 // Using Middleware
 khan.set('ola', 'nome');
@@ -59,9 +59,9 @@ khan.listen();
 ```
 
 ```Js
-let khan = new $khan();
+let khan = new Khan();
 let Router = khan.Router();
-let Controllers = khan.$controller;
+let Controllers = khan.controller;
 
 Controllers('index', function($scope){
     this.nome = "PaulaoDev";

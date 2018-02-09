@@ -2,7 +2,7 @@
   "name": "khan",
   "version": "1.0.0",
   "description": "Khan framework js",
-  "main": "",
+  "main": "http-server.js",
   "scripts": {
     "start": "npm-run-all -l -p start-server start-webpack",
     "start-webpack": "webpack -p",

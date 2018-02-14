@@ -2,8 +2,6 @@
 
 > Khan framework js
 
-- Example aplication using Khan [Demo](https://codepen.io/PaulaoDev/pen/jYzeyP)
-
 ## Installation
 
 ```html

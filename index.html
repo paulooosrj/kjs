@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Teste</title>
+	<link rel="stylesheet" href="">
+</head>
+<body>
+
+	<div class="app">
+		<h1>Ola {{ $dev.nome }}!</h1>
+		<h2>Testando Crawler youtube: <%= copy %></h2>
+		<button onClick="<%= youtubeService %>(this)">Crawler Youtube Button</button>
+		<% _.forEach(users, function(user) { %>
+			<li><%- user %></li> 
+		<% }); %> 
+	</div>
+
+	<script src="dist/index.js"></script>
+	<script>
+		
+		/**
+		 * [model data to aplication]
+		 * @type {Object}
+		 */
+		const model = {
+			dev: {
+				nome: 'PaulaoDev',
+				idade: 17
+			},
+			copy: 'Aguardando',
+			users: [
+				'Paulo',
+				'Maria',
+				'Joao',
+				'Joana'
+			],
+			youtubeService: function($target, $proxy){
+				$proxy.users.push('marianaa');
+				this.crawler('https://youtube.com').then(function(dom){
+					$proxy.copy = dom.querySelector('#copyright>div').innerHTML;
+				});
+			}
+		};
+
+		/** @type {[invoke]} [invoke aplication] */
+		const indexController = Khan.initialize('.app', model);
+		const app = new indexController(function($scope){
+			/**
+			 * [ function with proxy in this and $scope to change data ]
+			 */
+			setTimeout(() => $scope.dev.nome = 'PaulaoDeveloper', 3000);
+		});
+
+
+	</script>
+</body>
+</html>

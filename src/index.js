@@ -1,5 +1,14 @@
 import axios from 'axios';
+import tesseract from 'tesseract.js'
 const _ = require('lodash');
+
+Object.prototype.service = function(serviceName, serviceCall = false){
+	if(!serviceCall){
+		return this['service' + serviceName];
+	}else{
+		this['service' + serviceName] = serviceCall;
+	}
+};
 
 const App = new Object();
 
@@ -57,6 +66,7 @@ App.dataSet = function($scope, prop, valor){
 
 App.$injectorService = function(receive = {}){
 	receive.$http = axios;
+	receive.tesseract = tesseract;
 	receive.selector = App.$;
 	receive.selectorAll = App.$$;
 	receive._ = _;
@@ -97,7 +107,7 @@ App.initialize = function(view, data){
 
 	_.forIn(App.data, function(value, key){
 		if(typeof value === "object") App.data[key] = App.liveObj(value, App.update);
-		if(typeof value === "function"){
+		if(typeof value === "function" && key !== "service"){
 			let random = (key = 100000) => Math.floor(Math.random() * key);
 			let gen = random();
 			global['khan_' + gen + '_' + key] = function(...args){

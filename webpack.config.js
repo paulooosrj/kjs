@@ -2,7 +2,9 @@ const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 const path = require('path');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 var LodashModuleReplacementPlugin = require('lodash-webpack-plugin');
+require("babel-polyfill");
 
 const IS_PROD = (process.env.NODE_ENV === 'production');
 
@@ -36,7 +38,15 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.optimize.UglifyJsPlugin(),
+    new UglifyJsPlugin({
+      sourceMap: true,
+      uglifyOptions: {
+        ecma:8,  
+        compress: {
+          warnings: false
+        }
+      }
+    }),
     new BrowserSyncPlugin({
       host: 'localhost',
       port: 3000,

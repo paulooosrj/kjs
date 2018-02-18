@@ -1,6 +1,8 @@
 import axios from 'axios';
 import tesseract from 'tesseract.js'
 const _ = require('lodash');
+const performance = require('./fns/performance');
+const broadcast = require('./fns/broadcast');
 
 Object.prototype.service = function(serviceName, serviceCall = false){
 	if(!serviceCall){
@@ -67,6 +69,8 @@ App.dataSet = function($scope, prop, valor){
 App.$injectorService = function(receive = {}){
 	receive.$http = axios;
 	receive.tesseract = tesseract;
+	receive.broadcast = broadcast;
+	receive.performance = performance;
 	receive.selector = App.$;
 	receive.selectorAll = App.$$;
 	receive._ = _;

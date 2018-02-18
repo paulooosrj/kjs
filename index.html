@@ -39,13 +39,22 @@
 		};
 
 		model.service('Youtube', function($target, $proxy){
-			$proxy.users.push('marianaa');
+			/**
+			 * [Broadcast service]
+			 * @param  {[type]} 'novo usuario'      [channel bind broadcast]
+			 * @param  {[object]} (novo [new user in array]
+			 * @return {[null]}       [watch function]
+			 */
+			this.broadcast.bind('novo usuario', (novo) => $proxy.users.push(novo));
+			this.broadcast.emit('novo usuario', 'marianaa');
+			/**
+			 * [crawler service js vanilla]
+			 * @type {[https crawler page]}
+			 */
 			this.crawler('https://youtube.com').then(function(dom){
 				$proxy.copy = dom.querySelector('#copyright>div').innerHTML;
 			});
 		});
-
-		console.log(model.service('Youtube'));
 
 		/** @type {[invoke]} [invoke aplication] */
 		const indexController = Khan.initialize('.app', model);

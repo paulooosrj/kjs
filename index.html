@@ -58,7 +58,7 @@
 		});
 
 		/** @type {[invoke]} [invoke aplication] */
-		const indexController = Khan.initialize('.app', model);
+		const indexController = Khan('.app', model);
 		const app = new indexController(function($scope){
 			/**
 			 * [ function with proxy in this and $scope to change data ]

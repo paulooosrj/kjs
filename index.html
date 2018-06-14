@@ -3,70 +3,58 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Teste</title>
-	<link rel="stylesheet" href="">
+	<title>kjs</title>
 </head>
 <body>
-
-	<div class="app">
-		<h1>Ola {{ $dev.nome }}!</h1>
-		<h2>Testando Crawler youtube: <%= copy %></h2>
-		<button onClick="<%= serviceYoutube %>(this)">Crawler Youtube Button</button>
-		<% _.forEach(users, function(user) { %>
-			<li><%- user %></li> 
-		<% }); %> 
+	
+	<div id="app">
+		<h1 class="[{ nome !== 'false' ? 'app' : 'unapp' }]">
+			Ola tudo bem {{ fullName }} ?
+		</h1>
+		<div>
+			<form class="formulario">
+				<input type="text" placeholder="texto {{ nome }}">
+			</form>
+		</div>
+		<div>
+			{{ #peoples }}
+				{{ name }}
+			{{ /peoples }}
+		</div>
 	</div>
 
-	<script src="dist/index.js"></script>
-	<script>
-		
-		/**
-		 * [model data to aplication]
-		 * @type {Object}
-		 */
-		const model = {
-			dev: {
-				nome: 'PaulaoDev',
-				idade: 17
+	<script src="dist/kjs.min.js"></script>
+	<script type="text/javascript">
+
+		const app = new kjs().render("#app", {
+			nome: "Paulao",
+			sobrenome: "Junior",
+			fullName: function(){
+				return this.nome + " " + this.sobrenome;
 			},
-			copy: 'Aguardando',
-			users: [
-				'Paulo',
-				'Maria',
-				'Joao',
-				'Joana'
-			],
-			callTo: () => console.log("call to!!")
-		};
-
-		model.service('Youtube', function($target, $proxy){
-			/**
-			 * [Broadcast service]
-			 * @param  {[type]} 'novo usuario'      [channel bind broadcast]
-			 * @param  {[object]} (novo [new user in array]
-			 * @return {[null]}       [watch function]
-			 */
-			this.broadcast.bind('novo usuario', (novo) => $proxy.users.push(novo));
-			this.broadcast.emit('novo usuario', 'marianaa');
-			/**
-			 * [crawler service js vanilla]
-			 * @type {[https crawler page]}
-			 */
-			this.crawler('https://youtube.com').then(function(dom){
-				$proxy.copy = dom.querySelector('#copyright>div').innerHTML;
-			});
+			peoples: [
+			  { "name": "Moe" },
+			  { "name": "Larry" },
+			  { "name": "Curly" }
+			]
 		});
 
-		/** @type {[invoke]} [invoke aplication] */
-		const indexController = Khan('.app', model);
-		const app = new indexController(function($scope){
-			/**
-			 * [ function with proxy in this and $scope to change data ]
-			 */
-			setTimeout(() => $scope.dev.nome = 'PaulaoDeveloper', 3000);
+		document.querySelector(".formulario").addEventListener("submit", function(e){
+			
+			let input = document.querySelector("input");
+
+			app.setState('peoples', [...app.state.peoples, {
+				name: input.value
+			}]);
+
+			input.value = "";
+			e.preventDefault();
+
 		});
 
+		setTimeout(() => app.setState("nome", "Mario Dutra JR"), 3000);
 
 	</script>
+
 </body>
 </html>

@@ -1,4 +1,4 @@
-import Mustache from 'mustache';
+import * as Template from './render';
 
 class nodeBinds {
 
@@ -28,26 +28,6 @@ class nodeBinds {
 		return vd;
 	}
 
-	interpolate(tpl){
-
-		return Mustache.render(tpl, kjs._states);
-
-	}
-
-	interpolateAttr(tpl){
-		let pattern = /\[\{\s?(.*)\s?\}\]/gim;
-		let ntpl = tpl.replace(pattern, (repl, arg) => {
-			Object.keys(kjs._states).map((k) => {
-				if(arg.includes('data.' + k)) return;
-				arg = arg.replace(new RegExp(k, 'gim'), 'data.' + k);
-			});
-			return '${' + arg + '}';
-		});
-
-		return new Function('data', 'return `'+ntpl+'`;')(kjs._states);
-
-	}
-
 	clear(node, data){
 		let new_node = node.cloneNode(true);
 		let pattern = /<(.*?)>(.*?)<\/(.*?)>/g;
@@ -63,23 +43,34 @@ class nodeBinds {
 	binds(node, data, nodeOrigin){
 
 		let observerAttr = (attr, key, oldValue) => {
-			window.PubSub.on("attr-" + attr, function(value){
+
+			let fn = function(value){
 				let render = oldValue.includes("[{") && oldValue.includes("}]") ?
-					this.interpolateAttr : this.interpolate;
-				nodeOrigin.setAttribute(key, render(oldValue, {
-					[attr]: value
-				}));
-			}.bind(this));
+					Template.interpolateAttr : Template.interpolate;
+					let r = render(oldValue, {
+						[attr]: value
+					});
+					nodeOrigin.setAttribute(key, r);
+			}.bind(this);
+
+			fn(data[attr]);
+			window.PubSub.on("attr-" + attr, fn);
+
 		};
 
 		let observerBind = (bind) => {
-			window.PubSub.on("bind-" + bind, function(value){
+
+			let fn = function(value){
 				let render = node.innerText.includes("[{") && node.innerText.includes("}]") ?
-					this.interpolateAttr : this.interpolate;
-				nodeOrigin.innerText = render(node.innerText, {
-					[bind]: value
-				});
-			}.bind(this));
+					Template.interpolateAttr : Template.interpolate;
+					nodeOrigin.innerText = render(node.innerText, {
+						[bind]: value
+					});
+			}.bind(this);
+
+			fn(data[bind]);
+			window.PubSub.on("bind-" + bind, fn);
+
 		};
 
 		let bnds = [];
@@ -94,9 +85,7 @@ class nodeBinds {
 			}
 		}.bind(this));
 
-		values.map((v) => {
-			observerBind(v);
-		});
+		values.map((v) => observerBind(v));
 
 	}
 

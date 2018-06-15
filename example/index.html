@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Example KhanJS</title>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		.align-center{
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.app{
+			width: 100%;
+			height: 100vh;
+			flex-direction: column;
+			background: #3498db;
+		}
+		input{
+			width: 200px;
+			height: 50px;
+			border-radius: 5px;
+			border: none;
+			padding-left: 15px;
+			margin-top: 10px;
+		}
+	</style>
+</head>
+<body>
+	
+	<div id="app" class="align-center app">
+		<h1 event="click: show">
+			Welcome {{ fullName }}
+		</h1>
+		<form class="formulario" event="submit: form">
+			<input type="text" placeholder="Insert new people {{ name }}">
+		</form>
+		<ul>
+			{{ #peoples }}
+				{{ name }}
+			{{ /peoples }}
+		</ul>
+	</div>
+
+	<script src="../dist/kjs.min.js"></script>
+	<script>
+		const app = new kjs().render("#app", {
+			name: "Paulao",
+			lastname: "Dev",
+			fullName: function(){
+				return this.name + " " + this.lastname;
+			},
+			peoples: [
+			  { "name": "Maria" },
+			  { "name": "Jose" },
+			  { "name": "Pedro" }
+			],
+			form: function(event){
+				let input = document.querySelector("input");
+				let name = input.value;
+				let clear = () => input.value = "";
+				this.setState('peoples', [ ...app.state.peoples, { name } ]);
+				clear();
+				event.preventDefault();
+			}
+		});
+	</script>
+
+</body>
+</html>

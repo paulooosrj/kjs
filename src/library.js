@@ -11,9 +11,7 @@ window.$kjsStore = (model) => {
 		set(target, prop, value){
 			kjs._states = target;
 			target[prop] = typeof(value) === "function" 
-							? function(){
-								return value.bind(kjs._states)();
-							}
+							? value.bind(target)
 							: value;
 			window.PubSub.publish("attr-" + prop, value);
 			window.PubSub.publish("bind-" + prop, value);
@@ -25,7 +23,6 @@ window.$kjsStore = (model) => {
 export default class kjs {
 
   constructor() {
-    // this._name = getLibName();
     return this;
   }
 
@@ -34,7 +31,7 @@ export default class kjs {
   }
 
   setState(prop, value){
-  	this.$store[prop] = value;
+  	if(this.$store[prop] !== value) this.$store[prop] = value;
   }
 
   normalize(view, data){
@@ -42,26 +39,36 @@ export default class kjs {
   	const $ = document.querySelector.bind(document);
   	const $$ = document.querySelectorAll.bind(document);
   	let clear = (node) => nodeBinds.clear(node, data);
-
   	Array.from($(view).querySelectorAll("*")).map((node) => clear(node));
 
   }
 
-  emitProps(){
-  	Object.keys(this.$store).map((key) => {
-  		let prop = key;
-  		let value = this.$store[key];
-  		window.PubSub.publish("attr-" + prop, value);
-		window.PubSub.publish("bind-" + prop, value);
-  	});
+  emitAttrs(){
+    let scope = this;
+  	Array.from(document.querySelectorAll('[event]')).map(node => {
+        let eventos = node.getAttribute('event');
+        eventos = eventos.includes(',') ? eventos.split(',') : [eventos];
+        eventos.map((e) => {
+          let [ev, fn] = e.split(':').map(v => v.trim());
+          fn = (kjs._states[fn]) ? kjs._states[fn] : function(){ console.log("Not existing callback to event"); };
+          node.addEventListener(ev, fn.bind(scope));
+        });
+    });
   }
 
   render(view = "#app", data = {}){
 
+    var t0 = performance.now();
+
+    data.$app_id = Math.floor(Math.random() * 10000);
+    this.$store = window.$kjsStore(data);
+
   	this.normalize(view, data);
-  	this.$store = window.$kjsStore(data);
-  	this.emitProps();
-  	this.$store.id = Math.floor(Math.random() * 10000);
+
+    var t1 = performance.now();
+    this.$store.$app_time_render = parseInt((t1 - t0)) + " ms";
+
+    this.emitAttrs();
 
   	return this;
 

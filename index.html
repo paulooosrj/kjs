@@ -3,23 +3,91 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>kjs</title>
+	<title>KhanJS Framework</title>
+	<link rel="shootcut icon" href="https://cdn.auth0.com/blog/jsleaks/logo.png">
+	<link href="https://fonts.googleapis.com/css?family=Lato|Montserrat" rel="stylesheet">
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		.align-center{
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.background{
+			height: 100vh;
+			width: 100%;
+			background: url(https://i.imgur.com/P6z8WU4.jpg) no-repeat center center fixed; 
+			-webkit-background-size: cover;
+			-moz-background-size: cover;
+			-o-background-size: cover;
+			background-size: 100% 100%;
+		}
+		.skew{
+			width: 100%;
+			height: 50vh;
+			transform: skewY(6deg);
+			background: #ffeb3b;
+		}
+		.unskew{
+			transform: skewY(-6deg);
+			flex-direction: column;
+		}
+		.unskew h1{
+			font-family: 'Lato', sans-serif;
+		}
+		.unskew p{
+			font-family: 'Montserrat', sans-serif;
+			margin-top: 10px;
+		}
+		.btn-group{
+			display: flex;
+			justify-content: space-around;
+			align-items: center;
+			width: 60%;
+		}
+		.btn{
+			text-decoration: none;
+			border-radius: 200px;
+			height: 50px;
+			width: 200px;
+			background: #3c3c3c;
+			color: #fff;
+			font-family: 'Lato', sans-serif;
+			margin-top: 20px;
+		}
+		.btn:nth-child(2){
+			background: #ea9321;
+		}
+		.btn img{
+			width: 50px;
+			height: 100%;
+			margin-left: -25px;
+		}
+	</style>
 </head>
 <body>
-	
+
 	<div id="app">
-		<h1 class="[{ nome !== 'false' ? 'app' : 'unapp' }]">
-			Ola tudo bem {{ fullName }} ?
-		</h1>
-		<div>
-			<form class="formulario">
-				<input type="text" placeholder="texto {{ nome }}">
-			</form>
-		</div>
-		<div>
-			{{ #peoples }}
-				{{ name }}
-			{{ /peoples }}
+		<div class="background align-center">
+			<div class="skew align-center">
+				<div class="unskew align-center">
+					<h1>{{ title }}</h1>
+					<p>{{ about }}</p>
+					<div class="btn-group">
+						<a target="__blank" href="[{ repoLink }]" class="btn align-center">
+							<img src="http://icons.iconarchive.com/icons/danleech/simple/1024/github-icon.png" alt="">
+							Repository
+						</a>
+						<a target="__blank" href="[{ exampleLink }]" class="btn align-center">
+							<img src="https://i.pinimg.com/originals/2a/0c/74/2a0c747ddf855b5e19a96c1e2b0f3e92.png" alt="">
+							Example
+						</a>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -27,32 +95,11 @@
 	<script type="text/javascript">
 
 		const app = new kjs().render("#app", {
-			nome: "Paulao",
-			sobrenome: "Junior",
-			fullName: function(){
-				return this.nome + " " + this.sobrenome;
-			},
-			peoples: [
-			  { "name": "Moe" },
-			  { "name": "Larry" },
-			  { "name": "Curly" }
-			]
+			title: "KhanJS Framework",
+			about: "A new modern ecosystem that is scalable between a library and a complete framework.",
+			repoLink: "https://github.com/PaulaoDev/khan-framework",
+			exampleLink: "./example/"
 		});
-
-		document.querySelector(".formulario").addEventListener("submit", function(e){
-			
-			let input = document.querySelector("input");
-
-			app.setState('peoples', [...app.state.peoples, {
-				name: input.value
-			}]);
-
-			input.value = "";
-			e.preventDefault();
-
-		});
-
-		setTimeout(() => app.setState("nome", "Mario Dutra JR"), 3000);
 
 	</script>
 

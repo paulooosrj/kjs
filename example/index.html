@@ -3,6 +3,8 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Example KhanJS</title>
+	<link rel="shootcut icon" href="https://cdn.auth0.com/blog/jsleaks/logo.png">
+	<link rel="stylesheet" href="src.f840b053.css">
 	<style>
 		*{
 			margin: 0;
@@ -27,46 +29,63 @@
 			padding-left: 15px;
 			margin-top: 10px;
 		}
+		ul{
+			min-width: 140px;
+    	margin-top: 15px;
+		}
 	</style>
 </head>
 <body>
 	
 	<div id="app" class="align-center app">
-		<h1 event="click: show">
-			Welcome {{ fullName }}
-		</h1>
-		<form class="formulario" event="submit: form">
-			<input type="text" placeholder="Insert new people {{ name }}">
-		</form>
-		<ul>
-			{{ #peoples }}
-				{{ name }}
-			{{ /peoples }}
-		</ul>
+
+		<h2 [(class)]="class" [click]="changeTitle" style="cursor:pointer">
+      {{#if app}}
+        Exemplos {{ app.title }}
+      {{/if}}
+		</h2>
+		
+		<div class="formulario">
+      <p>Insira novas pessoas na lista</p>
+      <input type="text" [keypress]="add" placeholder="Nome">
+    </div>
+
+    <ul>
+      {{#each peoples}}
+        <li>{{ name }}</li>
+      {{/each}}
+    </ul>
+
 	</div>
 
 	<script src="../dist/kjs.min.js"></script>
 	<script>
-		const app = new kjs().render("#app", {
-			name: "Paulao",
-			lastname: "Dev",
-			fullName: function(){
-				return this.name + " " + this.lastname;
-			},
+
+		const app = kjs.init("#app", {
+			app: {
+        title: "KhanJS"
+      },
+      class: "myClass",
 			peoples: [
-			  { "name": "Maria" },
-			  { "name": "Jose" },
-			  { "name": "Pedro" }
-			],
-			form: function(event){
-				let input = document.querySelector("input");
-				let name = input.value;
-				let clear = () => input.value = "";
-				this.setState('peoples', [ ...app.state.peoples, { name } ]);
-				clear();
-				event.preventDefault();
+        { name: "Maria" },
+        { name: "Joao" },
+        { name: "Pedro" }
+      ],
+			changeTitle(event){
+        let { app } = this.$state;
+				app.title = app.title === "KhanJS" ? "KhanJS Application" : "KhanJS";
+        this.setState({ app });
+      },
+			add(event){
+				if( event.key === "Enter" ){
+          let { peoples } = this.$state;
+          peoples = peoples.concat({ name: event.target.value });
+          this.setState({ peoples });
+          event.target.value = "";
+        }
 			}
 		});
+
 	</script>
 
 </body>

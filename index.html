@@ -29,7 +29,7 @@
 			width: 100%;
 			height: 50vh;
 			transform: skewY(6deg);
-			background: #ffeb3b;
+			background: rgba(255, 235, 59, 0.74);
 		}
 		.unskew{
 			transform: skewY(-6deg);
@@ -77,11 +77,11 @@
 					<h1>{{ title }}</h1>
 					<p>{{ about }}</p>
 					<div class="btn-group">
-						<a target="__blank" href="[{ repoLink }]" class="btn align-center">
+						<a target="__blank" [(href)]="repoLink" class="btn align-center">
 							<img src="http://icons.iconarchive.com/icons/danleech/simple/1024/github-icon.png" alt="">
 							Repository
 						</a>
-						<a target="__blank" href="[{ exampleLink }]" class="btn align-center">
+						<a target="__blank" [(href)]="exampleLink" class="btn align-center">
 							<img src="https://i.pinimg.com/originals/2a/0c/74/2a0c747ddf855b5e19a96c1e2b0f3e92.png" alt="">
 							Example
 						</a>
@@ -94,7 +94,7 @@
 	<script src="dist/kjs.min.js"></script>
 	<script type="text/javascript">
 
-		const app = new kjs().render("#app", {
+		const app = kjs.init("#app", {
 			title: "KhanJS Framework",
 			about: "A new modern ecosystem that is scalable between a library and a complete framework.",
 			repoLink: "https://github.com/PaulaoDev/khan-framework",
